@@ -1,0 +1,16 @@
+{
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "user": "you@gmail.com",
+    "app_password": "",
+    "to": "you@gmail.com"
+  },
+  "sources": {
+    "predoc": true,
+    "nber": true,
+    "nber_external": true
+  },
+  "daily_email_even_if_empty": true,
+  "verification_email_full_list": true
+}
