@@ -2,7 +2,7 @@
 
 [English](README.md) · **中文**
 
-每天检查三个经济学 pre-doc / RA 招聘页，有新岗位就发邮件通知你。
+每日邮件推送主流经济学 pre-doc / RA 招聘页的新岗位。
 
 | 来源 | 页面 |
 |---|---|
@@ -53,7 +53,7 @@ Gmail 的 SMTP 不接受账号登录密码，需要单独生成一个应用专�
 python watch_jobs.py
 ```
 
-配置好密码后的第一次运行会发出一封验证信，同时把当前所有在招岗位记为基线，之后只通知新增的。收到这封信即表示配置成功。
+配置好密码后的第一次运行会发出一封验证信，同时把当前所有在招岗位记为基线，此后每日仅通知新增岗位。收到这封信即表示配置成功。
 
 ## 设为定时任务
 
@@ -123,7 +123,7 @@ Get-Content logs\watch.log -Tail 30
 ```
 watch_jobs.py         主程序
 config.example.json   配置模板
-config.json           你的配置（含密码，不要提交）
+config.json           你的配置（含密码，请不要上传至公开渠道）
 state.json            已知岗位记录，请勿手动修改
 logs/watch.log        运行日志
 setup_task.ps1        Windows 计划任务安装脚本
