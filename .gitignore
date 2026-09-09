@@ -1,0 +1,23 @@
+# 你的配置，里面有邮箱应用专用密码。绝对不要提交。
+# Your config. It holds your mailbox app password. Never commit it.
+config.json
+
+# 已知岗位的记录，各人不同
+# Record of known postings; local to each install
+state.json
+state.json.tmp
+
+# 运行时由 certifi + extra_ca/*.pem 合成
+# Generated at runtime from certifi + extra_ca/*.pem
+.ca_bundle.pem
+
+# 运行日志
+# Run logs
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
