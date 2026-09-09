@@ -77,11 +77,33 @@ Unregister-ScheduledTask -TaskName PredocWatcher -Confirm:$false # remove
 If the machine is off or asleep at that time, the task runs once after the next boot instead.
 It runs while you are logged in, so your Windows password is never stored in Task Scheduler.
 
-**Linux / macOS** — use cron:
+**macOS**
+
+```bash
+./setup_launchd.sh
+```
+
+Registers a launchd agent that runs daily at 09:07.
+
+```bash
+./setup_launchd.sh --at 07:23                           # different time
+./setup_launchd.sh --python /opt/homebrew/bin/python3   # choose an interpreter
+./setup_launchd.sh --uninstall                          # remove
+```
+
+If the machine is asleep or off at that time, launchd runs the job once after it wakes or boots.
+
+> This script has not yet been run on a real Mac. The plist it generates is validated, but if you
+> hit a problem, please open an issue.
+
+**Linux** — use cron:
 
 ```cron
 7 9 * * * cd /path/to/predoc-watcher-email && /usr/bin/python3 watch_jobs.py
 ```
+
+Note that cron does **not** catch up: if the machine is not running at that time, the day is simply
+skipped. On a laptop, a systemd timer with `Persistent=true` does catch up.
 
 ## Commands
 
@@ -108,13 +130,23 @@ It runs while you are logged in, so your Windows password is never stored in Tas
 `Username and Password not accepted` usually means a Gmail account password was used instead of
 an app password, or 2-Step Verification is off.
 
-On Windows, check that the scheduled task actually ran:
+Check that the scheduled job actually ran. On Windows:
 
 ```powershell
 Get-ScheduledTaskInfo -TaskName PredocWatcher
 ```
 
-`LastTaskResult` should be `0`.
+`LastTaskResult` should be `0`. On macOS:
+
+```bash
+launchctl print gui/$UID/local.predoc-watcher-email
+```
+
+Look at `last exit code`; it should be `0`. To run it right now:
+
+```bash
+launchctl kickstart -k gui/$UID/local.predoc-watcher-email
+```
 
 **The email says a source failed.** One of the boards could not be read this time. An occasional
 failure is usually a network problem; the previous data is kept, so nothing is lost or wrongly
@@ -124,7 +156,11 @@ code needs updating.
 **Read the log:**
 
 ```powershell
-Get-Content logs\watch.log -Tail 30
+Get-Content logs\watch.log -Tail 30      # Windows
+```
+
+```bash
+tail -30 logs/watch.log                  # macOS / Linux
 ```
 
 ## Files
@@ -136,6 +172,7 @@ config.json           your config (holds the password; do not upload it anywhere
 state.json            record of known postings; do not edit by hand
 logs/watch.log        run log
 setup_task.ps1        Windows scheduled task installer
+setup_launchd.sh      macOS launchd installer
 extra_ca/gdig2.pem    a CA certificate predoc.org omits; the program needs it to connect
 .ca_bundle.pem        generated at runtime; safe to delete
 ```

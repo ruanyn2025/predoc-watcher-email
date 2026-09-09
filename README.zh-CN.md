@@ -73,11 +73,33 @@ Unregister-ScheduledTask -TaskName PredocWatcher -Confirm:$false # 卸载
 
 到点时电脑关机或休眠会错过，开机后任务会自动补跑一次。任务在你登录后运行，因此不需要把 Windows 密码存进任务计划。
 
-**Linux / macOS** 用 cron：
+**macOS**
+
+```bash
+./setup_launchd.sh
+```
+
+注册一个 launchd 任务，每天 09:07 运行。
+
+```bash
+./setup_launchd.sh --at 07:23                    # 换时间
+./setup_launchd.sh --python /opt/homebrew/bin/python3   # 指定解释器
+./setup_launchd.sh --uninstall                   # 卸载
+```
+
+到点时机器睡着或关机，launchd 会在唤醒或开机后补跑一次。
+
+> 这个脚本尚未在 macOS 真机上运行过。生成的配置文件经过校验，但如果遇到问题，
+> 欢迎在仓库里提 issue。
+
+**Linux** 用 cron：
 
 ```cron
 7 9 * * * cd /path/to/predoc-watcher-email && /usr/bin/python3 watch_jobs.py
 ```
+
+注意 cron **不会补跑**：到点时机器不在运行状态，这一天就直接跳过了。笔记本用户可以改用
+systemd timer 的 `Persistent=true`，它有补跑行为。
 
 ## 命令
 
@@ -102,20 +124,34 @@ Unregister-ScheduledTask -TaskName PredocWatcher -Confirm:$false # 卸载
 
 出现 `Username and Password not accepted`，通常是填了 Gmail 登录密码而不是应用专用密码，或者没有开启两步验证。
 
-Windows 上还要确认计划任务确实运行过：
+还要确认定时任务确实运行过。Windows：
 
 ```powershell
 Get-ScheduledTaskInfo -TaskName PredocWatcher
 ```
 
-`LastTaskResult` 应为 `0`。
+`LastTaskResult` 应为 `0`。macOS：
+
+```bash
+launchctl print gui/$UID/local.predoc-watcher-email
+```
+
+看 `last exit code`，应为 `0`。想立刻跑一次：
+
+```bash
+launchctl kickstart -k gui/$UID/local.predoc-watcher-email
+```
 
 **邮件里出现抓取失败的提示。** 说明某个来源本次没抓成功。偶尔一两次通常是网络问题，上次的数据会保留，不会丢失或误报。如果连续多天出现，多半是网站改版了，需要更新解析代码。
 
 **查看日志：**
 
 ```powershell
-Get-Content logs\watch.log -Tail 30
+Get-Content logs\watch.log -Tail 30      # Windows
+```
+
+```bash
+tail -30 logs/watch.log                  # macOS / Linux
 ```
 
 ## 文件
@@ -127,6 +163,7 @@ config.json           你的配置（含密码，请不要上传至公开渠道�
 state.json            已知岗位记录，请勿手动修改
 logs/watch.log        运行日志
 setup_task.ps1        Windows 计划任务安装脚本
+setup_launchd.sh      macOS launchd 安装脚本
 extra_ca/gdig2.pem    predoc.org 缺失的一张 CA 中间证书，程序运行时需要
 .ca_bundle.pem        运行时自动生成，可以删除
 ```
