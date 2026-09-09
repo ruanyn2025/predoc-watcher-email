@@ -2,7 +2,7 @@
 
 **English** · [中文](README.zh-CN.md)
 
-Checks three econ pre-doc / RA job boards once a day and emails you the new postings.
+Emails you the new postings from the main econ pre-doc / RA job boards, once a day.
 
 | Source | Page |
 |---|---|
@@ -55,8 +55,8 @@ python watch_jobs.py
 ```
 
 The first run after you set the password sends a confirmation email and records everything
-currently open as the baseline. From then on you only hear about new postings. Getting that
-email means the setup worked.
+currently open as the baseline. From then on the daily email covers only new postings.
+Getting that email means the setup worked.
 
 ## Run it on a schedule
 
@@ -132,7 +132,7 @@ Get-Content logs\watch.log -Tail 30
 ```
 watch_jobs.py         the program
 config.example.json   config template
-config.json           your config (holds the password, do not commit)
+config.json           your config (holds the password; do not upload it anywhere public)
 state.json            record of known postings; do not edit by hand
 logs/watch.log        run log
 setup_task.ps1        Windows scheduled task installer
