@@ -11,7 +11,8 @@
 | NBER（非本部） | [research-assistant-positions-not-nber](https://www.nber.org/career-resources/research-assistant-positions-not-nber) |
 
 > 想要带界面的版本（搜索、收藏、日历提醒、申请追踪），见
-> [predoc_watcher_app](https://github.com/ruanyn2025/predoc_watcher_app)。两者互相独立，可只用其一。
+> [predoc_watcher_app](https://github.com/ruanyn2025/predoc_watcher_app)，
+> 也可以先[在浏览器里试用](https://claude.ai/code/artifact/4c78e2a9-6060-4889-bd3e-9f78ede18096)。两者互相独立，可只用其一。
 
 ## 安装
 

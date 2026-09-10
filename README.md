@@ -11,7 +11,8 @@ Emails you the new postings from the main econ pre-doc / RA job boards, once a d
 | NBER (external) | [research-assistant-positions-not-nber](https://www.nber.org/career-resources/research-assistant-positions-not-nber) |
 
 > For a version with an interface — search, starring, calendar reminders, application
-> tracking — see [predoc_watcher_app](https://github.com/ruanyn2025/predoc_watcher_app).
+> tracking — see [predoc_watcher_app](https://github.com/ruanyn2025/predoc_watcher_app),
+> or [try it in your browser](https://claude.ai/code/artifact/4c78e2a9-6060-4889-bd3e-9f78ede18096) first.
 > The two are independent; you can use either on its own.
 
 ## Install
