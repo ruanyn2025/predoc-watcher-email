@@ -154,6 +154,11 @@ failure is usually a network problem; the previous data is kept, so nothing is l
 reported. If it happens for several days running, the site has probably changed and the parsing
 code needs updating.
 
+Before starting, it waits for DNS to resolve, up to 5 minutes, because a scheduled run often fires
+while the machine is still reconnecting after waking. Fetching and sending each retry as well. A
+log line saying it waited the full budget and still could not resolve means there was genuinely no
+network at that moment.
+
 **Read the log:**
 
 ```powershell
