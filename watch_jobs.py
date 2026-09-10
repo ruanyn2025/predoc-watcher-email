@@ -17,13 +17,14 @@ import logging
 import os
 import re
 import smtplib
+import socket
 import sys
 import time
 from datetime import date, datetime
 from email.message import EmailMessage
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -343,7 +344,40 @@ def ca_bundle():
     return str(CA_BUNDLE_PATH)
 
 
-def fetch(url, retries=3, timeout=30):
+def wait_for_network(hosts, budget=300, log_every=60):
+    """开跑前先等 DNS 能解析，最多等 budget 秒。
+
+    计划任务开了 StartWhenAvailable，错过的那次会在开机/唤醒后立刻补跑 ——
+    而那正是 Wi-Fi 刚开始重连、DNS 还没就绪的时刻。之前每个来源各自重试
+    几秒就放弃，于是排在前面的站必然失败。这里改成先整体等网络。
+
+    返回 True 表示网络已就绪；False 表示等超时了（照常往下跑，让各来源
+    自己的重试和护栏去处理，不能因为探测失败就整轮不干活）。
+    """
+    start = time.monotonic()
+    announced = False
+    while True:
+        for host in hosts:
+            try:
+                socket.getaddrinfo(host, 443)
+                if announced:
+                    log.info("网络已就绪（等待 %.0f 秒）", time.monotonic() - start)
+                return True
+            except socket.gaierror:
+                continue
+        waited = time.monotonic() - start
+        if waited >= budget:
+            log.warning("等待网络 %.0f 秒仍无法解析域名，继续尝试抓取", waited)
+            return False
+        if not announced:
+            log.info("域名暂时解析不了，等待网络就绪（最多 %d 秒）", budget)
+            announced = True
+        elif int(waited) % log_every < 5:
+            log.info("仍在等待网络……已等 %.0f 秒", waited)
+        time.sleep(5)
+
+
+def fetch(url, retries=5, timeout=30):
     last = None
     for attempt in range(retries):
         try:
@@ -360,6 +394,8 @@ def fetch(url, retries=3, timeout=30):
         except Exception as exc:
             last = exc
             if attempt < retries - 1:
+                # 退避 2/4/8/16 秒。原来 3 次共 6 秒就放弃，对刚唤醒、
+                # Wi-Fi 还在重连的笔记本太短了。
                 wait = 2 ** attempt * 2
                 log.warning("抓取失败（第 %d 次）：%s；%d 秒后重试", attempt + 1, exc, wait)
                 time.sleep(wait)
@@ -643,10 +679,25 @@ def send_email(smtp_cfg, subject, text_body, html_body):
     msg["To"] = smtp_cfg["to"]
     msg.set_content(text_body)
     msg.add_alternative(html_body, subtype="html")
-    with smtplib.SMTP_SSL(smtp_cfg["host"], int(smtp_cfg["port"]), timeout=60) as srv:
-        srv.login(smtp_cfg["user"], smtp_cfg["app_password"])
-        srv.send_message(msg)
-    log.info("邮件已发送：%s", subject)
+    # 原来一次失败就放弃。DNS 或网络没就绪时那一封就彻底丢了，
+    # 得等到第二天才补发。
+    last = None
+    for attempt in range(4):
+        try:
+            with smtplib.SMTP_SSL(smtp_cfg["host"], int(smtp_cfg["port"]), timeout=60) as srv:
+                srv.login(smtp_cfg["user"], smtp_cfg["app_password"])
+                srv.send_message(msg)
+            log.info("邮件已发送：%s", subject)
+            return
+        except smtplib.SMTPAuthenticationError:
+            raise                       # 密码错了，重试多少次都一样
+        except Exception as exc:
+            last = exc
+            if attempt < 3:
+                wait = 2 ** attempt * 5
+                log.warning("发信失败（第 %d 次）：%s；%d 秒后重试", attempt + 1, exc, wait)
+                time.sleep(wait)
+    raise last
 
 
 def today_cn():
@@ -870,6 +921,11 @@ def main(argv=None):
     if unknown:
         log.error("未知来源：%s", ", ".join(unknown))
         return 2
+
+    # 唤醒后补跑时网络往往还没起来，先等一等再开工
+    probe = [urlparse(SOURCE_BY_ID[sid]["url"]).hostname for sid in wanted]
+    probe.append(smtp_cfg["host"])
+    wait_for_network([h for h in probe if h])
 
     log.info("开始检查 %d 个来源", len(wanted))
     results = {}
