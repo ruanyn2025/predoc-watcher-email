@@ -192,27 +192,20 @@ extra_ca/gdig2.pem    a CA certificate predoc.org omits; the program needs it to
 
 ## Changelog
 
-Newest first. Only changes that affect how the tool behaves; wording and layout fixes are not listed.
+Newest first. Only changes that affect how the tool behaves.
 
 ### 2026-09-10
 
-- Scheduled runs often fire while the machine is still reconnecting after waking, so DNS lookups
-  failed and a whole source could come back empty. It now waits for a hostname to resolve before
-  starting, up to 5 minutes, and adds no delay at all when the network is already up.
-- Fetch retries went from 3 attempts over 6 seconds to 5 over 30.
-- Sending now retries. A single failure used to lose the whole email until the next day.
+- Waits for the network before starting; fetching and sending both retry now. Fixes failed fetches
+  and lost email after the machine wakes.
 
 ### 2026-09-09
 
-- macOS support: `setup_launchd.sh` registers a launchd job. A run missed while the machine was
-  off happens after the next wake or boot, which cron does not do.
-- READMEs rewritten around using the tool, in English and Chinese.
-- Added `.gitignore` and `LICENSE`. The ignore rules matter: they keep `config.json`, which holds
-  your mailbox app password, out of the repository.
+- macOS support via launchd. READMEs rewritten for users, in English and Chinese.
 
 ### 2026-08-23
 
-- First version: three sources, daily email, Windows scheduled task, setup confirmation email.
+- First version: three sources, daily email, Windows scheduled task.
 
 ## License
 
