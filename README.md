@@ -192,8 +192,6 @@ extra_ca/gdig2.pem    a CA certificate predoc.org omits; the program needs it to
 
 ## Changelog
 
-Newest first. Only changes that affect how the tool behaves.
-
 ### 2026-09-10
 
 - Waits for the network before starting; fetching and sending both retry now. Fixes failed fetches
